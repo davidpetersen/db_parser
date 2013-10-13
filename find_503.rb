@@ -1,5 +1,4 @@
 require 'net/smtp'
-
 require 'rubygems' 
 require 'mysql2'
 
