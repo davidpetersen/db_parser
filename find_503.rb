@@ -61,5 +61,7 @@ end
 if counter > 1
 	puts "sending email\n"
 	send_email "dpetersen@gmail.com", :body => my_string 
+	send_email "gerard@buildzoom.com", :body => my_string 
+	send_email "alitvak@buildzoom.com", :body => my_string 
 end
 
