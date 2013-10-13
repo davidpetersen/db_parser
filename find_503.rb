@@ -39,10 +39,17 @@ found = 0
 counter = 0 
 if (log_file.length > 5)
 	lines = log_file.lines.count
-	puts lines
+#	puts lines
 	log_file.each_line do |line|
 		counter = counter + 1
-		puts "line " + counter.to_s + line + "\n\n"
+		puts "line " + counter.to_s + "\n\n"
+#157.56.92.172 - - [09/Oct/2013:11:11:56 -0700] "GET /contractor/thor-bloomfield HTTP/1.0" 503 104 "-" "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
+		#if (line =~ /[(.*?)] "GET (.*?) 503 .*? \d+ "-" "(.*?)"/)
+		if (line =~ /\[(.*?)\] "GET (.*?) HTTP.*?503 \d+ "-" "(.*?)"/)
+			puts "1: " + $1 + "\n"
+			puts "2: " + $2 + "\n"
+			puts "3: " + $3 + "\n"
+		end
 		if (counter > 10) 
 			exit
 		end
