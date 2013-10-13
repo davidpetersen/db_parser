@@ -2,6 +2,8 @@ require 'net/smtp'
 require 'rubygems' 
 require 'mysql2'
 
+puts "hi"
+
 db_password = ""
 
 ARGV.each do|a|
@@ -29,7 +31,7 @@ END_OF_MESSAGE
   end
 end
 
-log_file = `tail -n 20000 /media/drvf/logs/nginx/buildzoom.access.log | grep '1.1" 503'` 
+log_file = `tail -n 5000 /media/drvf/logs/nginx/buildzoom.access.log | grep '1.1" 503'` 
 #log_file2 = `tail -n 10000 /media/drvf/logs/nginx/buildzoom.access.log | grep '1.0" 503'` 
 
 if (log_file.length > 1)
