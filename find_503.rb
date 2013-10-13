@@ -3,20 +3,18 @@ require 'rubygems'
 require 'mysql2'
 
 db_password = ""
+
 ARGV.each do|a|
   db_password = a
-  print db_password
 end
 
 client = Mysql2::Client.new(:host => 'db.buildzoom.com', :database => 'bzdb', :username => "new", :password => db_password, :flags => Mysql2::Client::MULTI_STATEMENTS)
 
-
 def send_email(to,opts={})
   opts[:server]      ||= 'localhost'
-  opts[:from]        ||= 'dpetersen@gmail.com'
-  opts[:from_alias]  ||= 'Example Emailer'
-  opts[:subject]     ||= "You need to see this"
-  opts[:body]        ||= "Important stuff!"
+  opts[:from]        ||= 'david@buildzoom.com'
+  opts[:subject]     ||= "Nginx errors found"
+  opts[:body]        ||= "503 errors found in nginx log!"
 
   msg = <<END_OF_MESSAGE
 From: #{opts[:from_alias]} <#{opts[:from]}>
@@ -31,43 +29,37 @@ END_OF_MESSAGE
   end
 end
 
-log_file = `tail -n 5000000 /media/drvf/logs/nginx/buildzoom.access.log | grep '1.1" 503'` 
-log_file2 = `tail -n 5000000 /media/drvf/logs/nginx/buildzoom.access.log | grep '1.0" 503'` 
+log_file = `tail -n 20000 /media/drvf/logs/nginx/buildzoom.access.log | grep '1.1" 503'` 
+#log_file2 = `tail -n 10000 /media/drvf/logs/nginx/buildzoom.access.log | grep '1.0" 503'` 
 
-found = 0
-counter = 0 
-if (log_file.length > 5)
-	lines = log_file.lines.count
-#	puts lines
+if (log_file.length > 1)
 	log_file.each_line do |line|
-		counter = counter + 1
-		puts "line " + counter.to_s + "\n\n"
-#157.56.92.172 - - [09/Oct/2013:11:11:56 -0700] "GET /contractor/thor-bloomfield HTTP/1.0" 503 104 "-" "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)"
-		#if (line =~ /[(.*?)] "GET (.*?) 503 .*? \d+ "-" "(.*?)"/)
 		if (line =~ /\[(.*?)\] "GET (.*?) HTTP.*?503 \d+ "-" "(.*?)"/)
-			puts "1: " + $1 + "\n"
-			puts "2: " + $2 + "\n"
-			puts "3: " + $3 + "\n"
-		end
-		if (counter > 10) 
-			exit
+puts line
+			error_date = client.escape($1)
+			url = client.escape($2)
+			user_agent = client.escape($3)
+			query_string = "insert ignore into 503_errors (error_date, error_ua, error_url) values ('#{error_date}','#{user_agent}','#{url}')"
+			client.query(query_string)
 		end
 	end
-#	puts log_file 
-	#send_email "dpetersen@gmail.com", :body => log_file 
-	
-	found = 1
-#log_file.each_line do |line|
-#	puts line
 end
 
-exit
-if (log_file2.length > 5)
-	puts log_file2
-	#send_email "dpetersen@gmail.com", :body => log_file 
+query = "select id, error_date, error_ua, error_ip, error_url from 503_errors where emailed = 0"
+counter = 0
 
-	found = 1
-#log_file.each_line do |line|
-#	puts line
+my_string = ""
+
+results = client.query(query)
+results.each do |row|
+	counter = counter + 1
+	query2 = "update 503_errors set emailed = 1 where id = #{row['id']}"
+	client.query(query2)
+	my_string = my_string + "error_date: " + row['error_date'] + " error_url: " + row['error_ua'] + "error_url: " + row['error_url'] + "\n"
+end
+
+if counter > 1
+	puts "sending email\n"
+	send_email "dpetersen@gmail.com", :body => my_string 
 end
 
