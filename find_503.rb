@@ -2,15 +2,8 @@ require 'net/smtp'
 require 'rubygems' 
 require 'mysql2'
 
-puts "hi"
 
-db_password = ""
-
-ARGV.each do|a|
-  db_password = a
-end
-
-client = Mysql2::Client.new(:host => 'db.buildzoom.com', :database => 'bzdb', :username => "new", :password => db_password, :flags => Mysql2::Client::MULTI_STATEMENTS)
+client = Mysql2::Client.new(:host => 'db.buildzoom.com', :database => 'bzdb', :username => "new", :password => ARGV.first, :flags => Mysql2::Client::MULTI_STATEMENTS)
 
 def send_email(to,opts={})
   opts[:server]      ||= 'localhost'
